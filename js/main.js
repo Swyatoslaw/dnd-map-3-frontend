@@ -1,7 +1,7 @@
 import { getParams, buildUrl } from './url.js';
 import { createRoom, verifyOwner, getPlayerIdForToken, fetchRoom, uploadMapImage, updateRoomMap } from './room.js';
 import { Board, subscribeRoomMap } from './board.js';
-import { fetchPlayers, createPlayer, editPlayer, deletePlayer, moveToken, uploadAvatarImage } from './players.js';
+import { fetchPlayers, createPlayer, editPlayer, deletePlayer, moveToken, uploadAvatarImage, subscribeRoomPlayers } from './players.js';
 import { TokensRenderer } from './tokens.js';
 
 const $ = (id) => document.getElementById(id);
@@ -67,6 +67,11 @@ async function main() {
     board.setImageUrl(url).catch(() => showStatus('Не удалось загрузить карту.', true));
   });
 
+  const roomChannel = subscribeRoomPlayers(roomId, {
+    onPlayersChange: () => refreshPlayers(),
+    onTokenBroadcast: ({ playerId, x, y }) => tokens.applyRemotePosition(playerId, x, y),
+  });
+
   tokens = new TokensRenderer({
     layerEl: $('tokens-layer'),
     board,
@@ -77,6 +82,7 @@ async function main() {
         (err) => showStatus(`Не удалось передвинуть фишку: ${err.message}`, true)
       );
     },
+    onDragging: (playerId, x, y) => roomChannel.broadcastMove(playerId, x, y),
   });
 
   async function refreshPlayers() {

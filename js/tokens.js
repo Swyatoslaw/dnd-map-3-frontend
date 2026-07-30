@@ -5,6 +5,22 @@ function colorForId(id) {
   return `hsl(${hue}, 60%, 45%)`;
 }
 
+const DRAG_BROADCAST_INTERVAL_MS = 50;
+
+// Leading-edge throttle: fine here since the final position is always sent
+// separately (and reliably) via onMove at drag release — a missed
+// intermediate tick just means one less live-preview frame for onlookers.
+function throttle(fn, waitMs) {
+  let last = 0;
+  return (...args) => {
+    const now = performance.now();
+    if (now - last >= waitMs) {
+      last = now;
+      fn(...args);
+    }
+  };
+}
+
 // Renders players as absolutely-positioned DOM elements inside a viewport-
 // level layer (a sibling of the zoomable/pannable #stage, NOT a child of
 // it) so a token's on-screen size stays fixed regardless of the map's zoom
@@ -13,15 +29,29 @@ function colorForId(id) {
 // converted to viewport px using the board's current tx/ty/scale — both at
 // render time and live whenever the board's transform changes (pan/zoom).
 export class TokensRenderer {
-  constructor({ layerEl, board, isOwner, myPlayerId, onMove }) {
+  constructor({ layerEl, board, isOwner, myPlayerId, onMove, onDragging }) {
     this.layer = layerEl;
     this.board = board;
     this.isOwner = isOwner;
     this.myPlayerId = myPlayerId;
     this.onMove = onMove;
+    this.onDragging = onDragging ? throttle(onDragging, DRAG_BROADCAST_INTERVAL_MS) : null;
     this.elements = new Map();
     this.positions = new Map();
     this.draggingPlayerId = null;
+  }
+
+  // Applied for a token someone ELSE is dragging, received via Realtime
+  // broadcast — live preview only, the authoritative value still arrives
+  // later through postgres_changes once they release the pointer.
+  applyRemotePosition(playerId, x, y) {
+    if (this.draggingPlayerId === playerId) return;
+    this.positions.set(playerId, { x, y });
+    const el = this.elements.get(playerId);
+    if (!el) return;
+    const scr = this._percentToScreen(x, y);
+    el.style.left = `${scr.x}px`;
+    el.style.top = `${scr.y}px`;
   }
 
   canDrag(playerId) {
@@ -130,6 +160,7 @@ export class TokensRenderer {
       const scr = this._percentToScreen(x, y);
       el.style.left = `${scr.x}px`;
       el.style.top = `${scr.y}px`;
+      this.onDragging?.(playerId, x, y);
     };
 
     const onUp = () => {

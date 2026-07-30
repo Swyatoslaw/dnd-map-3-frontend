@@ -60,14 +60,35 @@ export async function uploadAvatarImage(roomId, file) {
   return data.publicUrl;
 }
 
-export function subscribePlayers(roomId, { onChange }) {
-  const channel = supabase
-    .channel(`room-players-${roomId}`)
+// Combines two Realtime mechanisms on one channel per room:
+//  - postgres_changes on `players`: authoritative state (add/edit/delete,
+//    and the final position written by move_token at drag release).
+//  - broadcast 'token-move': ephemeral, high-frequency position updates
+//    sent directly between clients WITHOUT touching the database, so a
+//    dragged token appears to move live for everyone instead of only
+//    jumping to its final spot once the dragger releases the pointer.
+// `broadcast: { self: false }` means the sender never receives its own
+// broadcast back — it already renders its own drag locally.
+export function subscribeRoomPlayers(roomId, { onPlayersChange, onTokenBroadcast }) {
+  const channel = supabase.channel(`room-players-${roomId}`, {
+    config: { broadcast: { self: false } },
+  });
+
+  channel
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'players', filter: `room_id=eq.${roomId}` },
-      onChange
+      onPlayersChange
     )
+    .on('broadcast', { event: 'token-move' }, ({ payload }) => onTokenBroadcast(payload))
     .subscribe();
-  return () => supabase.removeChannel(channel);
+
+  return {
+    broadcastMove(playerId, x, y) {
+      channel.send({ type: 'broadcast', event: 'token-move', payload: { playerId, x, y } });
+    },
+    unsubscribe() {
+      supabase.removeChannel(channel);
+    },
+  };
 }
