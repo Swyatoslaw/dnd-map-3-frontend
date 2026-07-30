@@ -22,12 +22,13 @@ export async function createPlayer(roomId, ownerToken, name, avatarUrl) {
   return { playerId: row.player_id, playerToken: row.player_token };
 }
 
-export async function editPlayer(playerId, ownerToken, { name, avatarUrl } = {}) {
+export async function editPlayer(playerId, { name, avatarUrl, ownerToken, playerToken } = {}) {
   const { error } = await supabase.rpc('edit_player', {
     p_player_id: playerId,
-    p_owner_token: ownerToken,
     p_name: name ?? null,
     p_avatar_url: avatarUrl ?? null,
+    p_owner_token: ownerToken ?? null,
+    p_player_token: playerToken ?? null,
   });
   if (error) throw error;
 }

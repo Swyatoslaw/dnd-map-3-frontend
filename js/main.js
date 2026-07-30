@@ -1,6 +1,6 @@
 import { getParams, buildUrl } from './url.js';
-import { createRoom, verifyOwner, getPlayerIdForToken, fetchRoom, uploadMapImage, updateRoomMap } from './room.js';
-import { Board, subscribeRoomMap } from './board.js';
+import { createRoom, verifyOwner, getPlayerIdForToken, fetchRoom, uploadMapImage, updateRoomMap, setPlayerEditAllowed } from './room.js';
+import { Board, subscribeRoom } from './board.js';
 import { fetchPlayers, createPlayer, editPlayer, deletePlayer, moveToken, uploadAvatarImage, subscribeRoomPlayers, getPlayerTokens } from './players.js';
 import { TokensRenderer } from './tokens.js';
 
@@ -12,6 +12,7 @@ const roleBadge = $('role-badge');
 const ownerControls = $('owner-controls');
 const playerPanel = $('player-panel');
 const playerList = $('player-list');
+const selfPanel = $('self-panel');
 
 function showStatus(message, isError = false) {
   statusEl.textContent = message;
@@ -59,12 +60,19 @@ async function main() {
   });
 
   const room = await fetchRoom(roomId);
-  if (room?.background_url) {
-    await board.setImageUrl(room.background_url).catch(() => showStatus('Не удалось загрузить карту.', true));
+  let currentBackgroundUrl = room?.background_url ?? null;
+  if (currentBackgroundUrl) {
+    await board.setImageUrl(currentBackgroundUrl).catch(() => showStatus('Не удалось загрузить карту.', true));
   }
 
-  subscribeRoomMap(roomId, (url) => {
-    board.setImageUrl(url).catch(() => showStatus('Не удалось загрузить карту.', true));
+  subscribeRoom(roomId, (updatedRoom) => {
+    if (updatedRoom.background_url !== currentBackgroundUrl) {
+      currentBackgroundUrl = updatedRoom.background_url;
+      board.setImageUrl(currentBackgroundUrl).catch(() => showStatus('Не удалось загрузить карту.', true));
+    }
+    if (role === 'player') {
+      applyPlayerEditAllowed(updatedRoom.allow_player_edit);
+    }
   });
 
   const roomChannel = subscribeRoomPlayers(roomId, {
@@ -91,6 +99,8 @@ async function main() {
     if (role === 'owner') {
       const playerTokens = await getPlayerTokens(roomId, ownerToken);
       renderPlayerList(players, roomId, ownerToken, refreshPlayers, playerTokens);
+    } else if (role === 'player') {
+      prefillSelfEditForm(players.find((p) => p.id === myPlayerId));
     }
     return players;
   }
@@ -103,6 +113,12 @@ async function main() {
     wireAddPlayerForm(roomId, ownerToken, refreshPlayers);
     wirePlayerPanelToggle();
     wireCopyAllLinks(roomId, ownerToken);
+    wireAllowPlayerEditToggle(roomId, ownerToken, room?.allow_player_edit ?? false);
+  } else if (role === 'player') {
+    selfPanel.hidden = false;
+    wireSelfPanelToggle();
+    wireSelfEditForm(roomId, myPlayerId, playerToken, refreshPlayers);
+    applyPlayerEditAllowed(room?.allow_player_edit ?? false);
   }
 }
 
@@ -137,6 +153,66 @@ function wirePlayerPanelToggle() {
   toggleBtn.addEventListener('click', () => {
     const collapsed = playerPanel.classList.toggle('collapsed');
     toggleBtn.textContent = collapsed ? '+' : '−';
+  });
+}
+
+function wireAllowPlayerEditToggle(roomId, ownerToken, initialValue) {
+  const checkbox = $('allow-player-edit-toggle');
+  checkbox.checked = initialValue;
+  checkbox.addEventListener('change', async () => {
+    const allowed = checkbox.checked;
+    try {
+      await setPlayerEditAllowed(roomId, ownerToken, allowed);
+      showStatus(allowed ? 'Игроки теперь могут менять свои данные.' : 'Редактирование для игроков выключено.');
+    } catch (err) {
+      checkbox.checked = !allowed;
+      showStatus(`Не удалось изменить настройку: ${err.message}`, true);
+    }
+  });
+}
+
+function wireSelfPanelToggle() {
+  const toggleBtn = $('toggle-self-panel');
+  toggleBtn.addEventListener('click', () => {
+    const collapsed = selfPanel.classList.toggle('collapsed');
+    toggleBtn.textContent = collapsed ? '+' : '−';
+  });
+}
+
+function applyPlayerEditAllowed(allowed) {
+  $('self-edit-hint').hidden = allowed;
+  $('self-name').disabled = !allowed;
+  $('self-avatar-file').disabled = !allowed;
+  $('self-avatar-url').disabled = !allowed;
+  $('self-edit-save-btn').disabled = !allowed;
+}
+
+function prefillSelfEditForm(player) {
+  if (!player) return;
+  const nameInput = $('self-name');
+  const urlInput = $('self-avatar-url');
+  if (document.activeElement !== nameInput) nameInput.value = player.name;
+  if (document.activeElement !== urlInput) urlInput.value = player.avatar_url || '';
+}
+
+function wireSelfEditForm(roomId, myPlayerId, playerToken, refreshPlayers) {
+  $('self-edit-form').addEventListener('submit', async (evt) => {
+    evt.preventDefault();
+    const name = $('self-name').value.trim();
+    if (!name) return;
+    const file = $('self-avatar-file').files[0];
+    const urlInput = $('self-avatar-url').value.trim();
+
+    try {
+      let avatarUrl = urlInput || undefined;
+      if (file) avatarUrl = await uploadAvatarImage(roomId, file);
+      await editPlayer(myPlayerId, { name, avatarUrl, playerToken });
+      $('self-avatar-file').value = '';
+      await refreshPlayers();
+      showStatus('Данные обновлены.');
+    } catch (err) {
+      showStatus(`Не удалось сохранить: ${err.message}`, true);
+    }
   });
 }
 
@@ -311,7 +387,7 @@ function toggleEditForm(row, player, roomId, ownerToken, refreshPlayers) {
       let avatarUrl = avatarUrlInput.value.trim() || undefined;
       const file = avatarFileInput.files[0];
       if (file) avatarUrl = await uploadAvatarImage(roomId, file);
-      await editPlayer(player.id, ownerToken, { name: nameInput.value.trim(), avatarUrl });
+      await editPlayer(player.id, { name: nameInput.value.trim(), avatarUrl, ownerToken });
       form.remove();
       await refreshPlayers();
       showStatus('Игрок обновлён.');

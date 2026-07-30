@@ -107,6 +107,23 @@ input[type="url"], input[type="text"] {
   flex-wrap: wrap;
 }
 
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: #ccc;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: #5865f2;
+  cursor: pointer;
+}
+
 .board-body {
   flex: 1;
   display: flex;
@@ -230,6 +247,23 @@ input[type="url"], input[type="text"] {
 .player-form input[type="text"], .player-form input[type="url"],
 .player-edit-form input[type="text"], .player-edit-form input[type="url"] {
   width: 100%;
+}
+
+.hint-text {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.player-form input:disabled,
+.player-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.player-form label:has(input:disabled) {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .stage {

@@ -29,7 +29,7 @@ export async function getPlayerIdForToken(roomId, playerToken) {
 export async function fetchRoom(roomId) {
   const { data, error } = await supabase
     .from('rooms')
-    .select('id, background_url')
+    .select('id, background_url, allow_player_edit')
     .eq('id', roomId)
     .maybeSingle();
   if (error) throw error;
@@ -52,6 +52,15 @@ export async function updateRoomMap(roomId, ownerToken, backgroundUrl) {
     p_room_id: roomId,
     p_owner_token: ownerToken,
     p_background_url: backgroundUrl,
+  });
+  if (error) throw error;
+}
+
+export async function setPlayerEditAllowed(roomId, ownerToken, allowed) {
+  const { error } = await supabase.rpc('set_player_edit_allowed', {
+    p_room_id: roomId,
+    p_owner_token: ownerToken,
+    p_allowed: allowed,
   });
   if (error) throw error;
 }

@@ -164,13 +164,15 @@ export class Board {
   }
 }
 
-export function subscribeRoomMap(roomId, onMapChanged) {
+// Passes the full updated room row so callers can react to any column
+// (background_url, allow_player_edit, ...) without a separate channel each.
+export function subscribeRoom(roomId, onRoomChanged) {
   const channel = supabase
-    .channel(`room-map-${roomId}`)
+    .channel(`room-${roomId}`)
     .on(
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` },
-      (payload) => onMapChanged(payload.new.background_url)
+      (payload) => onRoomChanged(payload.new)
     )
     .subscribe();
   return () => supabase.removeChannel(channel);
