@@ -157,6 +157,12 @@ input[type="url"], input[type="text"] {
 
 .player-panel.collapsed {
   width: auto;
+  /* Collapsed panel keeps the mobile position:absolute box's full
+     top:0/bottom:0 height (only its width shrinks to content), so
+     without this it silently traps touches meant for the map/tokens
+     underneath — a token can be dragged in but never back out. Let
+     everything except the toggle button pass through. */
+  pointer-events: none;
 }
 
 .player-panel.collapsed .player-panel-body {
@@ -168,6 +174,7 @@ input[type="url"], input[type="text"] {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  pointer-events: auto;
 }
 
 .player-panel-body {
