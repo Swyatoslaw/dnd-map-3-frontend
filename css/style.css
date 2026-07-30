@@ -62,6 +62,12 @@ html, body {
   color: white;
 }
 
+.btn:disabled {
+  background: #44474f;
+  color: #888;
+  cursor: default;
+}
+
 .btn-secondary {
   background: #33363f;
   color: #eee;
