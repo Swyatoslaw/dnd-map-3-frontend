@@ -51,6 +51,15 @@ export async function moveToken(playerId, x, y, { ownerToken, playerToken } = {}
   if (error) throw error;
 }
 
+export async function getPlayerTokens(roomId, ownerToken) {
+  const { data, error } = await supabase.rpc('get_player_tokens', {
+    p_room_id: roomId,
+    p_owner_token: ownerToken,
+  });
+  if (error) throw error;
+  return new Map(data.map((row) => [row.player_id, row.player_token]));
+}
+
 export async function uploadAvatarImage(roomId, file) {
   const ext = (file.name.split('.').pop() || 'png').toLowerCase();
   const path = `${roomId}/${crypto.randomUUID()}.${ext}`;

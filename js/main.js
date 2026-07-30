@@ -1,7 +1,7 @@
 import { getParams, buildUrl } from './url.js';
 import { createRoom, verifyOwner, getPlayerIdForToken, fetchRoom, uploadMapImage, updateRoomMap } from './room.js';
 import { Board, subscribeRoomMap } from './board.js';
-import { fetchPlayers, createPlayer, editPlayer, deletePlayer, moveToken, uploadAvatarImage, subscribeRoomPlayers } from './players.js';
+import { fetchPlayers, createPlayer, editPlayer, deletePlayer, moveToken, uploadAvatarImage, subscribeRoomPlayers, getPlayerTokens } from './players.js';
 import { TokensRenderer } from './tokens.js';
 
 const $ = (id) => document.getElementById(id);
@@ -88,7 +88,10 @@ async function main() {
   async function refreshPlayers() {
     const players = await fetchPlayers(roomId);
     tokens.render(players);
-    if (role === 'owner') renderPlayerList(players, roomId, ownerToken, refreshPlayers);
+    if (role === 'owner') {
+      const playerTokens = await getPlayerTokens(roomId, ownerToken);
+      renderPlayerList(players, roomId, ownerToken, refreshPlayers, playerTokens);
+    }
     return players;
   }
   await refreshPlayers();
@@ -99,7 +102,34 @@ async function main() {
     wireOwnerMapControls(roomId, ownerToken, board);
     wireAddPlayerForm(roomId, ownerToken, refreshPlayers);
     wirePlayerPanelToggle();
+    wireCopyAllLinks(roomId, ownerToken);
   }
+}
+
+async function copyToClipboard(text) {
+  await navigator.clipboard.writeText(text);
+}
+
+function wireCopyAllLinks(roomId, ownerToken) {
+  $('copy-all-links-btn').addEventListener('click', async () => {
+    try {
+      const [players, playerTokens] = await Promise.all([
+        fetchPlayers(roomId),
+        getPlayerTokens(roomId, ownerToken),
+      ]);
+      if (players.length === 0) {
+        showStatus('Пока нет ни одного игрока.');
+        return;
+      }
+      const text = players
+        .map((p) => `${p.name}:\n${buildUrl({ roomId, playerToken: playerTokens.get(p.id) })}`)
+        .join('\n\n');
+      await copyToClipboard(text);
+      showStatus('Список ссылок скопирован.');
+    } catch (err) {
+      showStatus(`Не удалось скопировать ссылки: ${err.message}`, true);
+    }
+  });
 }
 
 function wirePlayerPanelToggle() {
@@ -170,14 +200,14 @@ function wireAddPlayerForm(roomId, ownerToken, refreshPlayers) {
   });
 }
 
-function renderPlayerList(players, roomId, ownerToken, refreshPlayers) {
+function renderPlayerList(players, roomId, ownerToken, refreshPlayers, playerTokens) {
   playerList.innerHTML = '';
   for (const player of players) {
-    playerList.appendChild(createPlayerRow(player, roomId, ownerToken, refreshPlayers));
+    playerList.appendChild(createPlayerRow(player, roomId, ownerToken, refreshPlayers, playerTokens));
   }
 }
 
-function createPlayerRow(player, roomId, ownerToken, refreshPlayers) {
+function createPlayerRow(player, roomId, ownerToken, refreshPlayers, playerTokens) {
   const row = document.createElement('div');
   row.className = 'player-row';
 
@@ -195,6 +225,21 @@ function createPlayerRow(player, roomId, ownerToken, refreshPlayers) {
 
   const actions = document.createElement('div');
   actions.className = 'player-row-actions';
+
+  const copyLinkBtn = document.createElement('button');
+  copyLinkBtn.className = 'icon-btn';
+  copyLinkBtn.type = 'button';
+  copyLinkBtn.textContent = '🔗';
+  copyLinkBtn.title = 'Скопировать ссылку игрока';
+  copyLinkBtn.addEventListener('click', async () => {
+    try {
+      const playerToken = playerTokens.get(player.id);
+      await copyToClipboard(buildUrl({ roomId, playerToken }));
+      showStatus(`Ссылка «${player.name}» скопирована.`);
+    } catch (err) {
+      showStatus(`Не удалось скопировать ссылку: ${err.message}`, true);
+    }
+  });
 
   const editBtn = document.createElement('button');
   editBtn.className = 'icon-btn';
@@ -218,7 +263,7 @@ function createPlayerRow(player, roomId, ownerToken, refreshPlayers) {
     }
   });
 
-  actions.append(editBtn, deleteBtn);
+  actions.append(copyLinkBtn, editBtn, deleteBtn);
   row.append(avatar, name, actions);
   return row;
 }
