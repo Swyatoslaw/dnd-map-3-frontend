@@ -1,5 +1,5 @@
 import { getParams, buildUrl } from './url.js';
-import { createRoom, verifyOwner, getPlayerIdForToken, fetchRoom, uploadMapImage, updateRoomMap, setPlayerEditAllowed } from './room.js';
+import { createRoom, verifyOwner, getPlayerIdForToken, fetchRoom, uploadMapImage, updateRoomMap, setPlayerEditAllowed, fetchAppSettings } from './room.js';
 import { Board, subscribeRoom } from './board.js';
 import { fetchPlayers, createPlayer, editPlayer, deletePlayer, moveToken, uploadAvatarImage, subscribeRoomPlayers, getPlayerTokens } from './players.js';
 import { TokensRenderer } from './tokens.js';
@@ -28,7 +28,14 @@ async function main() {
 
   if (!roomId) {
     landing.hidden = false;
-    $('create-room-btn').addEventListener('click', onCreateRoom);
+    const createBtn = $('create-room-btn');
+    createBtn.addEventListener('click', onCreateRoom);
+
+    const settings = await fetchAppSettings().catch(() => ({ disable_room_creation: false }));
+    if (settings.disable_room_creation) {
+      createBtn.disabled = true;
+      $('create-room-disabled-hint').hidden = false;
+    }
     return;
   }
 
@@ -221,7 +228,10 @@ async function onCreateRoom() {
     const { roomId, ownerToken } = await createRoom();
     window.location.href = buildUrl({ roomId, ownerToken });
   } catch (err) {
-    showStatus(`Не удалось создать комнату: ${err.message}`, true);
+    const message = err.message.includes('room_creation_disabled')
+      ? 'Создание новых комнат временно отключено.'
+      : `Не удалось создать комнату: ${err.message}`;
+    showStatus(message, true);
   }
 }
 

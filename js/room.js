@@ -64,3 +64,15 @@ export async function setPlayerEditAllowed(roomId, ownerToken, allowed) {
   });
   if (error) throw error;
 }
+
+// app_settings is a manually-edited, dashboard-only table (see
+// dnd-map-3-supabase README) — this only ever reads it.
+export async function fetchAppSettings() {
+  const { data, error } = await supabase
+    .from('app_settings')
+    .select('disable_room_creation')
+    .eq('id', 1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ?? { disable_room_creation: false };
+}
