@@ -1,0 +1,266 @@
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #1b1d22;
+  color: #eee;
+  overscroll-behavior: none;
+}
+
+#app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Landing ---------- */
+
+#landing {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-card {
+  max-width: 420px;
+  text-align: center;
+  padding: 2rem;
+}
+
+.landing-card h1 {
+  margin-bottom: 0.5rem;
+}
+
+.landing-card p {
+  color: #aaa;
+  margin-bottom: 1.5rem;
+}
+
+/* ---------- Buttons / inputs ---------- */
+
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: center;
+}
+
+.btn-primary {
+  background: #5865f2;
+  color: white;
+}
+
+.btn-secondary {
+  background: #33363f;
+  color: #eee;
+}
+
+input[type="url"], input[type="text"] {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #24262c;
+  color: #eee;
+}
+
+/* ---------- Board view ---------- */
+
+#board-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #24262c;
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: #33363f;
+  font-size: 0.85rem;
+}
+
+.owner-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.board-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.viewport {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  background: #14151a;
+  cursor: grab;
+}
+
+.player-panel {
+  width: 280px;
+  flex-shrink: 0;
+  background: #24262c;
+  padding: 0.75rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.player-panel h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: #aaa;
+}
+
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #33363f;
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+}
+
+.player-row-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.player-row-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.player-row-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 0.95rem;
+  padding: 0.2rem 0.35rem;
+  border-radius: 4px;
+}
+
+.icon-btn:hover {
+  background: #44474f;
+}
+
+.player-form, .player-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.player-form input[type="text"], .player-form input[type="url"],
+.player-edit-form input[type="text"], .player-edit-form input[type="url"] {
+  width: 100%;
+}
+
+.stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+.stage img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  pointer-events: none;
+}
+
+#tokens-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.token {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  touch-action: none;
+  cursor: grab;
+}
+
+.token-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #5865f2;
+  border: 2px solid white;
+  object-fit: cover;
+}
+
+.token-name {
+  font-size: 0.75rem;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 1px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ---------- Status ---------- */
+
+.status {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #33363f;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.status.error {
+  background: #7a2c2c;
+}

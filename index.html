@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Online Game Board</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <section id="landing" hidden>
+      <div class="landing-card">
+        <h1>Online Game Board</h1>
+        <p>Онлайн-доска для настольных игр: загрузите карту, добавьте игроков и играйте вместе.</p>
+        <button id="create-room-btn" class="btn btn-primary">Создать комнату</button>
+      </div>
+    </section>
+
+    <section id="board-view" hidden>
+      <header class="toolbar">
+        <span id="role-badge" class="badge"></span>
+        <div id="owner-controls" class="owner-controls" hidden>
+          <label class="btn btn-secondary">
+            Загрузить карту
+            <input id="map-file-input" type="file" accept="image/*" hidden />
+          </label>
+          <input id="map-url-input" type="url" placeholder="или вставьте URL картинки" />
+          <button id="map-url-btn" class="btn btn-secondary">Установить по URL</button>
+        </div>
+      </header>
+
+      <div class="board-body">
+        <div id="viewport" class="viewport">
+          <div id="stage" class="stage">
+            <img id="map-image" alt="" draggable="false" />
+            <div id="tokens-layer"></div>
+          </div>
+        </div>
+
+        <aside id="player-panel" class="player-panel" hidden>
+          <h2>Игроки</h2>
+          <div id="player-list" class="player-list"></div>
+
+          <form id="add-player-form" class="player-form">
+            <input id="new-player-name" type="text" placeholder="Имя игрока" required />
+            <label class="btn btn-secondary">
+              Аватар (файл)
+              <input id="new-player-avatar-file" type="file" accept="image/*" hidden />
+            </label>
+            <input id="new-player-avatar-url" type="url" placeholder="или URL аватара" />
+            <button type="submit" class="btn btn-primary">Добавить игрока</button>
+          </form>
+        </aside>
+      </div>
+    </section>
+
+    <div id="status" class="status" hidden></div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
