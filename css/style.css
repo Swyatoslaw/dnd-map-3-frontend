@@ -214,6 +214,13 @@ input[type="url"], input[type="text"] {
   background: #44474f;
 }
 
+.panel-divider {
+  width: 100%;
+  border: none;
+  border-top: 1px solid #3a3d47;
+  margin: 0;
+}
+
 .player-form, .player-edit-form {
   display: flex;
   flex-direction: column;
