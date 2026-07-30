@@ -123,6 +123,8 @@ async function main() {
     wireAllowPlayerEditToggle(roomId, ownerToken, room?.allow_player_edit ?? false);
   } else if (role === 'player') {
     selfPanel.hidden = false;
+    selfPanel.classList.add('collapsed');
+    $('toggle-self-panel').textContent = '+';
     wireSelfPanelToggle();
     wireSelfEditForm(roomId, myPlayerId, playerToken, refreshPlayers);
     applyPlayerEditAllowed(room?.allow_player_edit ?? false);
