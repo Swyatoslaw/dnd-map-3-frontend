@@ -284,8 +284,7 @@ input[type="url"], input[type="text"] {
 /* Highlights the current player's own piece so it's easy to spot among
    others when viewing the board via a player invite link. */
 .token--own .token-avatar {
-  border: 3px solid #ffd166;
-  box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.5);
+  box-shadow: 0 0 0 3px rgb(0 0 0 / 45%);
 }
 
 .token-name {
