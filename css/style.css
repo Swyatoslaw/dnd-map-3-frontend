@@ -281,6 +281,13 @@ input[type="url"], input[type="text"] {
   border: 2px solid white;
 }
 
+/* Highlights the current player's own piece so it's easy to spot among
+   others when viewing the board via a player invite link. */
+.token--own .token-avatar {
+  border: 3px solid #ffd166;
+  box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.5);
+}
+
 .token-name {
   font-size: 0.75rem;
   background: rgba(0, 0, 0, 0.6);

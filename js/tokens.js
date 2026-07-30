@@ -113,6 +113,7 @@ export class TokensRenderer {
   _createElement(playerId) {
     const el = document.createElement('div');
     el.className = 'token';
+    if (playerId === this.myPlayerId) el.classList.add('token--own');
     el.dataset.playerId = playerId;
 
     const avatar = document.createElement('div');
