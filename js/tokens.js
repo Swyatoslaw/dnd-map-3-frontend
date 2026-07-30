@@ -5,10 +5,13 @@ function colorForId(id) {
   return `hsl(${hue}, 60%, 45%)`;
 }
 
-// Renders players as absolutely-positioned DOM elements (left/top in % —
-// same coordinate space as players.x/y) inside the board's tokens layer, and
-// handles Pointer Events dragging with permission checks (owner: any token,
-// player: only their own).
+// Renders players as absolutely-positioned DOM elements inside a viewport-
+// level layer (a sibling of the zoomable/pannable #stage, NOT a child of
+// it) so a token's on-screen size stays fixed regardless of the map's zoom
+// level or the map image's own dimensions. Position is tracked internally
+// as a percentage of the map image (same space as players.x/y) and
+// converted to viewport px using the board's current tx/ty/scale — both at
+// render time and live whenever the board's transform changes (pan/zoom).
 export class TokensRenderer {
   constructor({ layerEl, board, isOwner, myPlayerId, onMove }) {
     this.layer = layerEl;
@@ -17,6 +20,7 @@ export class TokensRenderer {
     this.myPlayerId = myPlayerId;
     this.onMove = onMove;
     this.elements = new Map();
+    this.positions = new Map();
     this.draggingPlayerId = null;
   }
 
@@ -34,18 +38,46 @@ export class TokensRenderer {
         this.elements.set(player.id, el);
         this.layer.appendChild(el);
       }
-      if (this.draggingPlayerId !== player.id) {
-        el.style.left = `${player.x}%`;
-        el.style.top = `${player.y}%`;
-      }
       this._updateContent(el, player);
+      if (this.draggingPlayerId !== player.id) {
+        this.positions.set(player.id, { x: player.x, y: player.y });
+      }
     }
     for (const [id, el] of this.elements) {
       if (!seen.has(id)) {
         el.remove();
         this.elements.delete(id);
+        this.positions.delete(id);
       }
     }
+    this.reposition();
+  }
+
+  // Called by Board after every pan/zoom transform update.
+  reposition() {
+    for (const [id, el] of this.elements) {
+      const pos = this.positions.get(id);
+      if (!pos) continue;
+      const { x, y } = this._percentToScreen(pos.x, pos.y);
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+    }
+  }
+
+  _percentToScreen(xPct, yPct) {
+    const b = this.board;
+    return {
+      x: b.tx + (xPct / 100) * b.naturalWidth * b.scale,
+      y: b.ty + (yPct / 100) * b.naturalHeight * b.scale,
+    };
+  }
+
+  _screenToPercent(xPx, yPx) {
+    const b = this.board;
+    return {
+      x: Math.min(100, Math.max(0, ((xPx - b.tx) / b.scale / b.naturalWidth) * 100)),
+      y: Math.min(100, Math.max(0, ((yPx - b.ty) / b.scale / b.naturalHeight) * 100)),
+    };
   }
 
   _createElement(playerId) {
@@ -53,7 +85,7 @@ export class TokensRenderer {
     el.className = 'token';
     el.dataset.playerId = playerId;
 
-    const avatar = document.createElement('img');
+    const avatar = document.createElement('div');
     avatar.className = 'token-avatar';
     const name = document.createElement('div');
     name.className = 'token-name';
@@ -72,11 +104,11 @@ export class TokensRenderer {
     const name = el.querySelector('.token-name');
     name.textContent = player.name;
     if (player.avatar_url) {
-      avatar.src = player.avatar_url;
-      avatar.style.background = 'transparent';
+      avatar.style.backgroundImage = `url("${player.avatar_url}")`;
+      avatar.style.backgroundColor = 'transparent';
     } else {
-      avatar.removeAttribute('src');
-      avatar.style.background = colorForId(player.id);
+      avatar.style.backgroundImage = 'none';
+      avatar.style.backgroundColor = colorForId(player.id);
     }
   }
 
@@ -85,20 +117,19 @@ export class TokensRenderer {
     evt.preventDefault();
     const el = this.elements.get(playerId);
     el.setPointerCapture(evt.pointerId);
-
-    const startClientX = evt.clientX;
-    const startClientY = evt.clientY;
-    const startLeft = parseFloat(el.style.left) || 0;
-    const startTop = parseFloat(el.style.top) || 0;
     this.draggingPlayerId = playerId;
 
+    const viewportRect = this.board.viewport.getBoundingClientRect();
+
     const onMove = (moveEvt) => {
-      const dxPct = ((moveEvt.clientX - startClientX) / this.board.scale / this.board.naturalWidth) * 100;
-      const dyPct = ((moveEvt.clientY - startClientY) / this.board.scale / this.board.naturalHeight) * 100;
-      const x = Math.min(100, Math.max(0, startLeft + dxPct));
-      const y = Math.min(100, Math.max(0, startTop + dyPct));
-      el.style.left = `${x}%`;
-      el.style.top = `${y}%`;
+      const { x, y } = this._screenToPercent(
+        moveEvt.clientX - viewportRect.left,
+        moveEvt.clientY - viewportRect.top
+      );
+      this.positions.set(playerId, { x, y });
+      const scr = this._percentToScreen(x, y);
+      el.style.left = `${scr.x}px`;
+      el.style.top = `${scr.y}px`;
     };
 
     const onUp = () => {
@@ -106,9 +137,8 @@ export class TokensRenderer {
       el.removeEventListener('pointerup', onUp);
       el.removeEventListener('pointercancel', onUp);
       this.draggingPlayerId = null;
-      const x = parseFloat(el.style.left) || 0;
-      const y = parseFloat(el.style.top) || 0;
-      this.onMove(playerId, x, y);
+      const pos = this.positions.get(playerId);
+      this.onMove(playerId, pos.x, pos.y);
     };
 
     el.addEventListener('pointermove', onMove);

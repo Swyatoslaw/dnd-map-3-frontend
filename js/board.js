@@ -15,11 +15,11 @@ function midpoint(a, b) {
 // on top of it. Token coordinates are percentages (0..100) of the image's
 // natural size, so they line up regardless of current zoom/pan/viewport size.
 export class Board {
-  constructor({ viewportEl, stageEl, imageEl, tokensLayerEl }) {
+  constructor({ viewportEl, stageEl, imageEl, onTransformChange }) {
     this.viewport = viewportEl;
     this.stage = stageEl;
     this.image = imageEl;
-    this.tokensLayer = tokensLayerEl;
+    this.onTransformChange = onTransformChange;
 
     this.scale = 1;
     this.tx = 0;
@@ -41,6 +41,10 @@ export class Board {
     this.viewport.addEventListener('pointerup', this._onPointerUp);
     this.viewport.addEventListener('pointercancel', this._onPointerUp);
     this.viewport.addEventListener('wheel', this._onWheel, { passive: false });
+    // Belt-and-suspenders against native HTML5 image drag hijacking the pan
+    // gesture (draggable="false" + -webkit-user-drag:none on the map <img>
+    // should already prevent it, this is a catch-all safety net).
+    this.viewport.addEventListener('dragstart', (evt) => evt.preventDefault());
   }
 
   async setImageUrl(url) {
@@ -75,6 +79,7 @@ export class Board {
 
   _applyTransform() {
     this.stage.style.transform = `translate(${this.tx}px, ${this.ty}px) scale(${this.scale})`;
+    this.onTransformChange?.();
   }
 
   _clientPoint(evt) {
@@ -84,6 +89,7 @@ export class Board {
 
   _onPointerDown(evt) {
     if (evt.target.closest('.token')) return; // let board.js consumers handle token drags
+    evt.preventDefault();
     this.viewport.setPointerCapture(evt.pointerId);
     this.pointers.set(evt.pointerId, this._clientPoint(evt));
 
@@ -155,20 +161,6 @@ export class Board {
 
   _clampScale(scale) {
     return Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
-  }
-
-  // Converts a percentage-based token position to px within the (unscaled)
-  // stage — CSS `left/top: %` on tokensLayer already does this for us, this
-  // helper is here for consumers that need px math (e.g. clamping during drag).
-  percentToStagePx(xPct, yPct) {
-    return { x: (xPct / 100) * this.naturalWidth, y: (yPct / 100) * this.naturalHeight };
-  }
-
-  stagePxToPercent(xPx, yPx) {
-    return {
-      x: Math.min(100, Math.max(0, (xPx / this.naturalWidth) * 100)),
-      y: Math.min(100, Math.max(0, (yPx / this.naturalHeight) * 100)),
-    };
   }
 }
 

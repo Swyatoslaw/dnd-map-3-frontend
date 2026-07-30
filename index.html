@@ -33,23 +33,29 @@
         <div id="viewport" class="viewport">
           <div id="stage" class="stage">
             <img id="map-image" alt="" draggable="false" />
-            <div id="tokens-layer"></div>
           </div>
+          <div id="tokens-layer"></div>
         </div>
 
         <aside id="player-panel" class="player-panel" hidden>
-          <h2>Игроки</h2>
-          <div id="player-list" class="player-list"></div>
+          <div class="player-panel-header">
+            <h2>Игроки</h2>
+            <button id="toggle-player-panel" class="icon-btn" type="button" title="Свернуть/развернуть">−</button>
+          </div>
 
-          <form id="add-player-form" class="player-form">
-            <input id="new-player-name" type="text" placeholder="Имя игрока" required />
-            <label class="btn btn-secondary">
-              Аватар (файл)
-              <input id="new-player-avatar-file" type="file" accept="image/*" hidden />
-            </label>
-            <input id="new-player-avatar-url" type="url" placeholder="или URL аватара" />
-            <button type="submit" class="btn btn-primary">Добавить игрока</button>
-          </form>
+          <div id="player-panel-body" class="player-panel-body">
+            <div id="player-list" class="player-list"></div>
+
+            <form id="add-player-form" class="player-form">
+              <input id="new-player-name" type="text" placeholder="Имя игрока" required />
+              <label class="btn btn-secondary">
+                Аватар (файл)
+                <input id="new-player-avatar-file" type="file" accept="image/*" hidden />
+              </label>
+              <input id="new-player-avatar-url" type="url" placeholder="или URL аватара" />
+              <button type="submit" class="btn btn-primary">Добавить игрока</button>
+            </form>
+          </div>
         </aside>
       </div>
     </section>

@@ -50,11 +50,12 @@ async function main() {
   boardView.hidden = false;
   roleBadge.textContent = role === 'owner' ? 'Ведущий' : 'Игрок';
 
+  let tokens;
   const board = new Board({
     viewportEl: $('viewport'),
     stageEl: $('stage'),
     imageEl: $('map-image'),
-    tokensLayerEl: $('tokens-layer'),
+    onTransformChange: () => tokens?.reposition(),
   });
 
   const room = await fetchRoom(roomId);
@@ -66,7 +67,7 @@ async function main() {
     board.setImageUrl(url).catch(() => showStatus('Не удалось загрузить карту.', true));
   });
 
-  const tokens = new TokensRenderer({
+  tokens = new TokensRenderer({
     layerEl: $('tokens-layer'),
     board,
     isOwner: role === 'owner',
@@ -91,7 +92,16 @@ async function main() {
     playerPanel.hidden = false;
     wireOwnerMapControls(roomId, ownerToken, board);
     wireAddPlayerForm(roomId, ownerToken, refreshPlayers);
+    wirePlayerPanelToggle();
   }
+}
+
+function wirePlayerPanelToggle() {
+  const toggleBtn = $('toggle-player-panel');
+  toggleBtn.addEventListener('click', () => {
+    const collapsed = playerPanel.classList.toggle('collapsed');
+    toggleBtn.textContent = collapsed ? '+' : '−';
+  });
 }
 
 async function onCreateRoom() {
@@ -165,9 +175,13 @@ function createPlayerRow(player, roomId, ownerToken, refreshPlayers) {
   const row = document.createElement('div');
   row.className = 'player-row';
 
-  const avatar = document.createElement('img');
+  const avatar = document.createElement('div');
   avatar.className = 'player-row-avatar';
-  if (player.avatar_url) avatar.src = player.avatar_url;
+  if (player.avatar_url) {
+    avatar.style.backgroundImage = `url("${player.avatar_url}")`;
+  } else {
+    avatar.style.backgroundColor = '#5865f2';
+  }
 
   const name = document.createElement('span');
   name.className = 'player-row-name';
