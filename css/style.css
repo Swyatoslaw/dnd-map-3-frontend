@@ -405,7 +405,7 @@ input[type="url"], input[type="text"] {
   .player-panel.collapsed .player-panel-header {
     background: rgba(36, 38, 44, 0.75);
     border-radius: 10px;
-    padding: 0.4rem 0.6rem;
+    padding: 0.4rem 0.6rem 0.4rem 1.2rem
   }
 
   .icon-btn {
