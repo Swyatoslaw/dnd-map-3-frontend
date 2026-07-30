@@ -116,6 +116,8 @@ async function main() {
   if (role === 'owner') {
     ownerControls.hidden = false;
     playerPanel.hidden = false;
+    playerPanel.classList.add('collapsed');
+    $('toggle-player-panel').textContent = '+';
     wireOwnerMapControls(roomId, ownerToken, board);
     wireAddPlayerForm(roomId, ownerToken, refreshPlayers);
     wirePlayerPanelToggle();
