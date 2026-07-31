@@ -13,6 +13,7 @@ const ownerControls = $('owner-controls');
 const playerPanel = $('player-panel');
 const playerList = $('player-list');
 const selfPanel = $('self-panel');
+const settingsPanel = $('settings-panel');
 
 function showStatus(message, isError = false) {
   statusEl.textContent = message;
@@ -118,6 +119,10 @@ async function main() {
     playerPanel.hidden = false;
     playerPanel.classList.add('collapsed');
     $('toggle-player-panel').textContent = '+';
+    settingsPanel.classList.add('collapsed');
+    $('toggle-settings-panel').hidden = false;
+    $('toggle-settings-panel').textContent = '+';
+    wireSettingsPanelToggle();
     wireOwnerMapControls(roomId, ownerToken, board);
     wireAddPlayerForm(roomId, ownerToken, refreshPlayers);
     wirePlayerPanelToggle();
@@ -163,6 +168,14 @@ function wirePlayerPanelToggle() {
   const toggleBtn = $('toggle-player-panel');
   toggleBtn.addEventListener('click', () => {
     const collapsed = playerPanel.classList.toggle('collapsed');
+    toggleBtn.textContent = collapsed ? '+' : '−';
+  });
+}
+
+function wireSettingsPanelToggle() {
+  const toggleBtn = $('toggle-settings-panel');
+  toggleBtn.addEventListener('click', () => {
+    const collapsed = settingsPanel.classList.toggle('collapsed');
     toggleBtn.textContent = collapsed ? '+' : '−';
   });
 }

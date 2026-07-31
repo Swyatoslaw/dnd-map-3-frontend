@@ -20,28 +20,32 @@
     </section>
 
     <section id="board-view" hidden>
-      <header class="toolbar">
-        <span id="role-badge" class="badge"></span>
-        <div id="owner-controls" class="owner-controls" hidden>
-          <label class="btn btn-secondary">
-            Загрузить карту
-            <input id="map-file-input" type="file" accept="image/*" hidden />
-          </label>
-          <input id="map-url-input" type="url" placeholder="или вставьте URL картинки" />
-          <button id="map-url-btn" class="btn btn-secondary">Установить по URL</button>
-          <label class="toggle-label">
-            <input id="allow-player-edit-toggle" type="checkbox" />
-            Разрешить игрокам редактирование
-          </label>
-        </div>
-      </header>
-
       <div class="board-body">
         <div id="viewport" class="viewport">
           <div id="stage" class="stage">
             <img id="map-image" alt="" draggable="false" />
           </div>
           <div id="tokens-layer"></div>
+        </div>
+
+        <div id="settings-panel" class="settings-panel">
+          <div class="player-panel-header">
+            <span id="role-badge" class="badge"></span>
+            <button id="toggle-settings-panel" class="icon-btn" type="button" title="Свернуть/развернуть" hidden>−</button>
+          </div>
+
+          <div id="owner-controls" class="owner-controls settings-panel-body" hidden>
+            <label class="btn btn-secondary">
+              Загрузить карту
+              <input id="map-file-input" type="file" accept="image/*" hidden />
+            </label>
+            <input id="map-url-input" type="url" placeholder="или вставьте URL картинки" />
+            <button id="map-url-btn" class="btn btn-secondary">Установить по URL</button>
+            <label class="toggle-label">
+              <input id="allow-player-edit-toggle" type="checkbox" />
+              Разрешить игрокам редактирование
+            </label>
+          </div>
         </div>
 
         <aside id="player-panel" class="player-panel" hidden>
