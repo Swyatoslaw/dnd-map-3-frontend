@@ -134,6 +134,7 @@ input[type="url"], input[type="text"] {
   flex: 1;
   display: flex;
   min-height: 0;
+  position: relative;
 }
 
 .viewport {
@@ -155,18 +156,34 @@ input[type="url"], input[type="text"] {
   gap: 0.75rem;
 }
 
+/* Collapsed state always floats as an overlay pill (top-right corner),
+   same look on desktop/tablet/mobile — only the expanded state differs
+   (inline sidebar on desktop, slide-over on mobile, see media query). It
+   keeps the containing block's full top:0/bottom:0 height, so without
+   pointer-events:none it would silently trap touches/clicks meant for the
+   map/tokens underneath (a token could be dragged in but never back out).
+   Only the toggle button re-enables pointer-events. */
 .player-panel.collapsed {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
   width: auto;
-  /* Collapsed panel keeps the mobile position:absolute box's full
-     top:0/bottom:0 height (only its width shrinks to content), so
-     without this it silently traps touches meant for the map/tokens
-     underneath — a token can be dragged in but never back out. Let
-     everything except the toggle button pass through. */
+  background: transparent;
+  box-shadow: none;
+  padding: 0.5rem;
   pointer-events: none;
 }
 
 .player-panel.collapsed .player-panel-body {
   display: none;
+}
+
+.player-panel.collapsed .player-panel-header {
+  background: rgba(36, 38, 44, 0.75);
+  border-radius: 10px;
+  padding: 0.4rem 0.6rem 0.4rem 1.2rem;
 }
 
 .player-panel-header {
@@ -381,10 +398,6 @@ input[type="url"], input[type="text"] {
     font-size: 0.9rem;
   }
 
-  .board-body {
-    position: relative;
-  }
-
   .player-panel {
     position: absolute;
     top: 0;
@@ -393,19 +406,6 @@ input[type="url"], input[type="text"] {
     z-index: 10;
     width: min(85vw, 320px);
     box-shadow: -4px 0 16px rgba(0, 0, 0, 0.5);
-  }
-
-  .player-panel.collapsed {
-    width: auto;
-    background: transparent;
-    box-shadow: none;
-    padding: 0.5rem;
-  }
-
-  .player-panel.collapsed .player-panel-header {
-    background: rgba(36, 38, 44, 0.75);
-    border-radius: 10px;
-    padding: 0.4rem 0.6rem 0.4rem 1.2rem
   }
 
   .icon-btn {
