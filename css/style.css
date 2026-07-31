@@ -108,6 +108,15 @@ input[type="url"], input[type="text"] {
 
 .settings-panel .player-panel-header {
   padding: 0.5rem 0.75rem;
+  /* Button comes before the badge and the header is left-anchored/
+     shrink-to-fit (not stretched to the body's width, which can grow
+     wide on mobile because the URL input inside it is flex:1) — so the
+     toggle stays pinned at the panel's own left edge no matter how wide
+     the body gets, instead of drifting to the panel's far (right) edge,
+     which is where the player-list panel's own collapsed pill sits. */
+  align-self: flex-start;
+  justify-content: flex-start;
+  gap: 0.5rem;
 }
 
 .settings-panel-body {
@@ -126,7 +135,7 @@ input[type="url"], input[type="text"] {
 .settings-panel.collapsed .player-panel-header {
   background: rgba(36, 38, 44, 0.75);
   border-radius: 10px;
-  padding: 0.4rem 0.6rem 0.4rem 1.2rem;
+  padding: 0.4rem 1.2rem 0.4rem 0.6rem;
 }
 
 .badge {
