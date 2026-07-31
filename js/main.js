@@ -57,7 +57,7 @@ async function main() {
   }
 
   boardView.hidden = false;
-  roleBadge.textContent = role === 'owner' ? 'Ведущий' : 'Игрок';
+  roleBadge.textContent = role === 'owner' ? 'Настройки' : 'Игрок';
 
   let tokens;
   const board = new Board({
